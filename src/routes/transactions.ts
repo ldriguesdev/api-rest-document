@@ -60,7 +60,7 @@ export async function transactionsRoutes(app: FastifyTypedInstance) {
         },
       },
     },
-    async (request, reply) => {
+    async (_, reply) => {
       const transactions = await knex('transactions').select('*')
 
       reply.status(200).send({
