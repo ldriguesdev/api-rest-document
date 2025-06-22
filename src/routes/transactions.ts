@@ -8,7 +8,7 @@ const createTransactionBodySchema = z.object({
   type: z.enum(['credit', 'debit']),
 })
 
-const getAllTransactionsSchema = z.object({
+const getTransactionsBodySchema = z.object({
   transactions: z.array(
     z.object({
       id: z.string(),
@@ -17,6 +17,19 @@ const getAllTransactionsSchema = z.object({
       createdAt: z.string().datetime(),
     }),
   ),
+})
+
+const getTransactionByIdSchema = z.object({
+  transaction: z.object({
+    id: z.string(),
+    title: z.string(),
+    amount: z.number(),
+    createdAt: z.string().datetime(),
+  }),
+})
+
+const getTransactionByIdParamsSchema = z.object({
+  id: z.string().uuid(),
 })
 
 export async function transactionsRoutes(app: FastifyTypedInstance) {
@@ -56,7 +69,7 @@ export async function transactionsRoutes(app: FastifyTypedInstance) {
         summary: 'List all transactions',
         description: 'Returns all transactions from the database',
         response: {
-          200: getAllTransactionsSchema,
+          200: getTransactionsBodySchema,
         },
       },
     },
@@ -70,6 +83,43 @@ export async function transactionsRoutes(app: FastifyTypedInstance) {
           amount: transaction.amount,
           createdAt: new Date(transaction.created_at).toISOString(),
         })),
+      })
+    },
+  )
+
+  app.get(
+    '/transactions/:id',
+    {
+      schema: {
+        tags: ['Transactions'],
+        summary: 'Get a transaction by ID',
+        description: 'Returns a specific transaction by its ID',
+        params: getTransactionByIdParamsSchema,
+        response: {
+          200: getTransactionByIdSchema,
+          404: z.object({
+            statusCode: z.number(),
+            error: z.string(),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+    async (request, reply) => {
+      const { id } = getTransactionByIdParamsSchema.parse(request.params)
+
+      const transaction = await knex('transactions').where('id', id).first()
+
+      if (!transaction) {
+        reply.status(404).send({
+          statusCode: 404,
+          error: 'Not Found',
+          message: 'Transaction not found',
+        })
+      }
+
+      reply.status(200).send({
+        transaction,
       })
     },
   )
