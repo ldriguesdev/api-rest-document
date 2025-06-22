@@ -30,7 +30,7 @@ app.register(fastifyZodOpenApiPlugin)
 app.register(fastifySwagger, {
   openapi: {
     info: {
-      title: 'Transactions API',
+      title: 'Finance API',
       description: 'API for managing financial transactions',
       version: '1.0.0',
     },

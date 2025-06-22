@@ -8,13 +8,25 @@ const createTransactionBodySchema = z.object({
   type: z.enum(['credit', 'debit']),
 })
 
+const getAllTransactionsSchema = z.object({
+  transactions: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      amount: z.number(),
+      createdAt: z.string().datetime(),
+    }),
+  ),
+})
+
 export async function transactionsRoutes(app: FastifyTypedInstance) {
   app.post(
     '/transactions',
     {
       schema: {
         tags: ['Transactions'],
-        description: 'Create a new transactions',
+        summary: 'Create a new transaction',
+        description: 'Creates a new transaction with type credit or debit',
         body: createTransactionBodySchema,
         response: {
           201: z.object({ message: z.string().optional() }),
@@ -33,6 +45,32 @@ export async function transactionsRoutes(app: FastifyTypedInstance) {
       })
 
       return reply.status(201).send()
+    },
+  )
+
+  app.get(
+    '/transactions',
+    {
+      schema: {
+        tags: ['Transactions'],
+        summary: 'List all transactions',
+        description: 'Returns all transactions from the database',
+        response: {
+          200: getAllTransactionsSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const transactions = await knex('transactions').select('*')
+
+      reply.status(200).send({
+        transactions: transactions.map((transaction) => ({
+          id: transaction.id,
+          title: transaction.title,
+          amount: transaction.amount,
+          createdAt: new Date(transaction.created_at).toISOString(),
+        })),
+      })
     },
   )
 }
