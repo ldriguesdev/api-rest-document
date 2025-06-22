@@ -2,42 +2,14 @@ import { knex } from '../database'
 import { z } from 'zod'
 import { FastifyTypedInstance } from '../types'
 import { transactionMapper } from '../mappers/transaction'
-
-const createTransactionBodySchema = z.object({
-  title: z.string(),
-  amount: z.number(),
-  type: z.enum(['credit', 'debit']),
-})
-
-const getTransactionsBodySchema = z.object({
-  transactions: z.array(
-    z.object({
-      id: z.string(),
-      title: z.string(),
-      amount: z.number(),
-      createdAt: z.string().datetime(),
-    }),
-  ),
-})
-
-const getTransactionByIdSchema = z.object({
-  transaction: z.object({
-    id: z.string(),
-    title: z.string(),
-    amount: z.number(),
-    createdAt: z.string().datetime(),
-  }),
-})
-
-const getTransactionByIdParamsSchema = z.object({
-  id: z.string().uuid(),
-})
-
-const errorSchema = z.object({
-  statusCode: z.number(),
-  error: z.string(),
-  message: z.string(),
-})
+import {
+  createTransactionBodySchema,
+  getTransactionByIdParamsSchema,
+  getTransactionByIdSchema,
+  getTransactionsBodySchema,
+  successSchema,
+  errorSchema,
+} from '../schemas/transactions'
 
 export async function transactionsRoutes(app: FastifyTypedInstance) {
   app.post(
@@ -49,7 +21,7 @@ export async function transactionsRoutes(app: FastifyTypedInstance) {
         description: 'Creates a new transaction with type credit or debit',
         body: createTransactionBodySchema,
         response: {
-          201: z.object({ message: z.string().optional() }),
+          201: successSchema,
         },
       },
     },
@@ -80,7 +52,7 @@ export async function transactionsRoutes(app: FastifyTypedInstance) {
         params: getTransactionByIdParamsSchema,
         body: createTransactionBodySchema,
         response: {
-          200: z.object({ message: z.string().optional() }),
+          200: successSchema,
           404: errorSchema,
         },
       },
